@@ -8,14 +8,14 @@ import os
 df = pd.read_csv("AQI_dataset.csv")
 df["AQI Value"] = pd.to_numeric(df["AQI Value"], errors="coerce")
 
-# ========== Create a quick-access dictionary keyed by city ==========
+# ========== Create quick-access lookup ==========
 city_data = {row["City"]: row for _, row in df.iterrows()}
 
-# ========== Calculate global statistics ==========
+# ========== Compute basic stats ==========
 avg_aqi = df["AQI Value"].mean()
 city_count = df["City"].nunique()
 
-# ========== Generate interactive map using OpenStreetMap ==========
+# ========== Create map ==========
 map_fig = px.scatter_map(
     df,
     lat="lat",
@@ -24,80 +24,141 @@ map_fig = px.scatter_map(
     hover_name="City",
     hover_data={"AQI Value": ':.0f'},
     zoom=1,
-    height=600
+    height=500
 )
-map_fig.update_layout(map_style="open-street-map", margin={"r": 0, "t": 50, "l": 0, "b": 0})
 
-# ========== Initialize Dash application ==========
+map_fig.update_layout(
+    map_style="open-street-map",
+    margin={"r": 0, "t": 40, "l": 0, "b": 0},
+    paper_bgcolor="#1e1e1e",
+    plot_bgcolor="#1e1e1e",
+    font=dict(color="white"),
+    legend=dict(
+        title="AQI Category",
+        x=0.01,
+        y=0.99,
+        xanchor="left",
+        yanchor="top",
+        bgcolor="rgba(40,40,40,0.7)",
+        bordercolor="gray",
+        borderwidth=1,
+        font=dict(color="white", size=10),
+        orientation="v"
+    )
+)
+
+# ========== Initialize Dash app ==========
 app = dash.Dash(__name__)
+
+# Add dark background for full body
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                background-color: #1e1e1e;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
 app.title = "Global AQI Dashboard"
 
-# ========== Define layout of the dashboard ==========
+# ========== Define layout ==========
 app.layout = html.Div([
-    html.H1("Global Air Quality Index (AQI) Dashboard 🌍", style={"textAlign": "center"}),
+    html.H1("Global AQI Dashboard 🌍", style={
+        "textAlign": "center",
+        "fontSize": "26px",
+        "paddingBottom": "10px"
+    }),
 
     html.Div([
-
-        # ========== Left panel: Map and basic statistics ==========
+        # === Left: Map & stats ===
         html.Div([
             html.H3(f"Global average AQI: {avg_aqi:.1f}", style={
-                "backgroundColor": "#f9c74f" if avg_aqi < 100 else "#f94144",
+                "backgroundColor": "#333" if avg_aqi < 100 else "#600",
+                "color": "#f1f1f1",
                 "padding": "10px",
                 "borderRadius": "10px",
                 "textAlign": "center",
-                "marginBottom": "10px"
+                "marginBottom": "10px",
+                "border": "1px solid #666"
             }),
-            html.P(f"Number of cities in dataset: {city_count}"),
-            dcc.Graph(id="aqi-map", figure=map_fig, style={"height": "600px", "width": "100%"})
+            html.P(f"Number of cities in dataset: {city_count}", style={"textAlign": "center"}),
+            dcc.Graph(id="aqi-map", figure=map_fig, style={"height": "500px", "width": "100%"})
         ], style={
-            "flex": "2",
-            "paddingRight": "20px",
+            "flex": "1",
+            "minWidth": "300px",
+            "padding": "10px",
             "boxSizing": "border-box"
         }),
 
-        # ========== Right panel: AQI breakdown per component ==========
+        # === Right: AQI breakdown ===
         html.Div([
-            html.H2("AQI Components Breakdown", style={"textAlign": "center"}),
+            html.H2("AQI Components Breakdown", style={
+                "textAlign": "center",
+                "fontSize": "20px"
+            }),
             dcc.Graph(id="aqi-details", style={"height": "400px", "width": "100%"})
         ], style={
             "flex": "1",
-            "paddingLeft": "20px",
-            "boxSizing": "border-box",
-            "borderLeft": "1px solid #ccc"
-        })
-
+            "minWidth": "300px",
+            "padding": "10px",
+            "boxSizing": "border-box"
+        }),
     ], style={
         "display": "flex",
         "flexDirection": "row",
-        "justifyContent": "space-between",
-        "alignItems": "flex-start",
+        "flexWrap": "wrap",
+        "justifyContent": "center",
+        "alignItems": "stretch",
         "width": "100%",
-        "maxWidth": "100%",
-        "flexWrap": "nowrap"
+        "boxSizing": "border-box"
     })
 
 ], style={
-    "padding": "20px",
-    "width": "100%",
-    "maxWidth": "100%",
-    "boxSizing": "border-box"
+    "padding": "10px",
+    "maxWidth": "1200px",
+    "margin": "auto",
+    "boxSizing": "border-box",
+    "backgroundColor": "#1e1e1e",
+    "color": "#f1f1f1",
+    "minHeight": "100vh"
 })
 
-# ========== Callback to update AQI component breakdown when a city is clicked ==========
+# ========== Callback for AQI details ==========
 @app.callback(
     Output("aqi-details", "figure"),
     Input("aqi-map", "clickData")
 )
 def update_details(clickData):
+    # Jeśli nic nie kliknięto, pokaż dane dla Warsaw
     if not clickData:
-        return px.bar(title="Click a city on the map to see AQI breakdown")
+        city = "Warsaw"
+    else:
+        city = clickData["points"][0]["hovertext"]
 
-    city = clickData["points"][0]["hovertext"]
     row = city_data.get(city)
     if row is None:
-        return px.bar(title="No data available for this city")
+        return px.bar(title=f"No data available for {city}")
 
-    # ========== Extract AQI components for the selected city ==========
     components = {
         "PM2.5": float(row["PM2.5 AQI Value"]),
         "Ozone": float(row["Ozone AQI Value"]),
@@ -105,16 +166,24 @@ def update_details(clickData):
         "CO": float(row["CO AQI Value"])
     }
 
-    # ========== Create a bar chart for the AQI breakdown ==========
     fig = px.bar(
         x=list(components.keys()),
         y=list(components.values()),
         labels={"x": "Component", "y": "AQI Value"},
         title=f"AQI Breakdown for: {city}"
     )
+
+    fig.update_layout(
+        margin={"l": 40, "r": 20, "t": 50, "b": 30},
+        font={"size": 14, "color": "white"},
+        height=400,
+        plot_bgcolor="#1e1e1e",
+        paper_bgcolor="#1e1e1e"
+    )
+
     return fig
 
-# ========== Run the Dash app ==========
+# ========== Run locally or via Render ==========
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8050))
     app.run(host="0.0.0.0", port=port, debug=False)

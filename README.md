@@ -1,37 +1,43 @@
-# 🌍 Global Air Quality Index (AQI) Dashboard
+# 🌍 Global AQI Dashboard
 
-An interactive dashboard built using **Dash** and **Plotly** to visualize global air quality data from a CSV dataset.
+An interactive Dash app that visualizes global **Air Quality Index (AQI)** data using a **map-based interface** and **component-level breakdowns**.
 
-## 🚀 Features
+✅ Live version: [aqi-dash.onrender.com](https://aqi-dash.onrender.com)
 
-- Interactive world map with AQI (Air Quality Index) levels by city
-- AQI category color-coded visualization
-- Click on a city to view the breakdown of AQI components:
-  - PM2.5
-  - Ozone
-  - NO₂
-  - CO
-- Summary statistics including:
-  - Global average AQI
-  - Number of cities in the dataset
+---
 
-## 🗂 Dataset
+## ✨ Features
 
-The dataset used must be in CSV format and contain the following columns:
+- 📍 Interactive **scatter map** with AQI categories by city
+- 📊 Detailed **bar chart** showing AQI components: PM2.5, Ozone, NO₂, CO
+- 🌘 **Dark mode** UI for better visual contrast
+- 📱 **Responsive layout** optimized for mobile and desktop
+- 📌 Default breakdown shown for **Warsaw**
+- 📁 Clean project structure, ready to deploy
 
-- `City`
-- `AQI Value`
-- `AQI Category`
-- `lat` (latitude)
-- `lng` (longitude)
-- `PM2.5 AQI Value`
-- `Ozone AQI Value`
-- `NO2 AQI Value`
-- `CO AQI Value`
+---
 
-## 📦 Requirements
+## 📸 Screenshots
 
-Install dependencies using pip:
+| Map with Legend | AQI Component Breakdown |
+|-----------------|-------------------------|
+| ![Map](images/map_sample.png) | ![Chart](images/chart_sample.png) |
+
+---
+
+## 🛠 Tech Stack
+
+- [Dash](https://dash.plotly.com/)
+- [Plotly](https://plotly.com/python/)
+- [Pandas](https://pandas.pydata.org/)
+- OpenStreetMap for base map rendering
+
+---
+
+## 🚀 Run Locally
 
 ```bash
-pip install dash pandas plotly
+git clone https://github.com/KustronBartlomiej/aqi-dash.git
+cd aqi-dash
+pip install -r requirements.txt
+python mainDash.py
