@@ -4,7 +4,7 @@ from dash import dcc, html, Input, Output
 import plotly.express as px
 
 # ========== Load dataset ==========
-df = pd.read_csv("D:\\VisualStudio\\GitHub\\Kaggle\\AQI_dataset.csv")
+df = pd.read_csv("AQI_dataset.csv")
 df["AQI Value"] = pd.to_numeric(df["AQI Value"], errors="coerce")
 
 # ========== Create a quick-access dictionary keyed by city ==========
