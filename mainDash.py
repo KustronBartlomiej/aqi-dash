@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output
 import plotly.express as px
+import os
 
 # ========== Load dataset ==========
 df = pd.read_csv("AQI_dataset.csv")
@@ -115,4 +116,5 @@ def update_details(clickData):
 
 # ========== Run the Dash app ==========
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8050))
+    app.run(host="0.0.0.0", port=port, debug=False)
